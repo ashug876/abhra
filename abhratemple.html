@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    /* Previous styles remain the same until .flat */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f5ff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .towers-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .tower-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tower-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 10px 0;
+    }
+    
+    .tower {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 5px;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .floor {
+      display: flex;
+      gap: 5px;
+      padding: 8px;
+      background-color: #e8eaf6;
+      border-radius: 5px;
+      align-items: center;
+    }
+    
+    .floor-number {
+      width: 100px;
+      font-weight: bold;
+      color: #3f51b5;
+      font-size: 0.9em;
+    }
+    
+    .flats {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .flat {
+      background-color: #3f51b5;
+      color: white;
+      padding: 8px;
+      border-radius: 5px;
+      min-width: 70px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      font-size: 0.9em;
+      padding-top: 15px; /* Added to make room for the house icon */
+    }
+
+    .flat:hover {
+      transform: scale(1.05);
+      cursor: pointer;
+    }
+
+    .lit {
+      background-color: #ffd700;
+      color: #000;
+      box-shadow: 0 0 20px #ffeb3b;
+      animation: glow 1.5s infinite alternate;
+    }
+
+    .diya {
+      position: absolute;
+      top: -15px;
+      left: 30%;
+      transform: translateX(-50%);
+      font-size: 20px;
+    }
+
+    .home {
+      position: absolute;
+      top: -15px;
+      right: 10px; /* Modified to be consistently on the right */
+      font-size: 16px; /* Slightly reduced size */
+    }
+
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 10px #ffeb3b;
+      }
+      to {
+        box-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffd700;
+      }
+    }
+    
+    .ground-floor {
+      background-color: #f5f5f5;
+      border: 2px solid #3f51b5;
+    }
+    
+    @media (max-width: 1200px) {
+      .towers-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Towers Floor Plan</h1>
+  <div class="towers-container" id="towersContainer"></div>
+
+  <script>
+    const towerConfigs = {
+      'A': 5,
+      'B': 5,
+      'C': 2,
+      'D': 5,
+      'E': 5
+    };
+    
+    // Hardcoded lit flats
+    const litFlats = new Set([
+      'A0003', 'A1404',  // Tower A
+      'B0102', 'B1503',  // Tower B
+      'C0201',          // Tower C
+      'D0504', 'D1002', // Tower D
+      'E0803', 'E1701'  // Tower E
+    ]);
+    
+    function padNumber(num) {
+      return num.toString().padStart(2, '0');
+    }
+
+    function createTower(towerName, flatsPerFloor) {
+      const towerWrapper = document.createElement('div');
+      towerWrapper.className = 'tower-wrapper';
+      
+      const towerNameDiv = document.createElement('div');
+      towerNameDiv.className = 'tower-name';
+      towerNameDiv.textContent = `Tower ${towerName}`;
+      towerWrapper.appendChild(towerNameDiv);
+      
+      const tower = document.createElement('div');
+      tower.className = 'tower';
+      
+      for (let floor = 0; floor <= 17; floor++) {
+        const floorDiv = document.createElement('div');
+        floorDiv.className = `floor ${floor === 0 ? 'ground-floor' : ''}`;
+        
+        const floorNumber = document.createElement('div');
+        floorNumber.className = 'floor-number';
+        floorNumber.textContent = `Floor ${floor}`;
+        
+        const flatsDiv = document.createElement('div');
+        flatsDiv.className = 'flats';
+        
+        for (let flat = 1; flat <= flatsPerFloor; flat++) {
+          const flatDiv = document.createElement('div');
+          const flatNumber = `${towerName}${padNumber(floor)}${padNumber(flat)}`;
+          flatDiv.className = `flat ${litFlats.has(flatNumber) ? 'lit' : ''}`;
+          flatDiv.textContent = flatNumber;
+          
+          // Add house icon to every flat
+          const home = document.createElement('div');
+          home.className = 'home';
+          home.textContent = '🏠';
+          flatDiv.appendChild(home);
+          
+          // Add diya only to lit flats
+          if (litFlats.has(flatNumber)) {
+            const diya = document.createElement('div');
+            diya.className = 'diya';
+            diya.textContent = '🪔';
+            flatDiv.appendChild(diya);
+          }
+          
+          flatsDiv.appendChild(flatDiv);
+        }
+        
+        floorDiv.appendChild(floorNumber);
+        floorDiv.appendChild(flatsDiv);
+        tower.appendChild(floorDiv);
+      }
+      
+      towerWrapper.appendChild(tower);
+      return towerWrapper;
+    }
+
+    function updateTowers() {
+      const container = document.getElementById('towersContainer');
+      container.innerHTML = '';
+      
+      for (const [towerName, flatsPerFloor] of Object.entries(towerConfigs)) {
+        container.appendChild(createTower(towerName, flatsPerFloor));
+      }
+    }
+
+    // Initialize the towers
+    updateTowers();
+  </script>
+</body>
+</html>
