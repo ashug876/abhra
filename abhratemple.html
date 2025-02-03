@@ -2,7 +2,6 @@
 <html>
 <head>
   <style>
-    /* Previous styles remain the same until .flat */
     body {
       font-family: Arial, sans-serif;
       background-color: #f0f5ff;
@@ -16,12 +15,28 @@
     h1 {
       color: #2c3e50;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #2c3e50;
+      margin-bottom: 10px;
+      font-size: 1em;
+      text-align: center;
+    }
+
+    #totalDonations {
+      background-color: #ffd700;
+      color: #000;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-bottom: 20px;
     }
 
     .towers-container {
       display: flex;
-      gap: 20px;
+      gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
     }
@@ -33,90 +48,124 @@
     }
 
     .tower-name {
-      font-size: 1.5em;
+      font-size: 1em; /* Smaller for compact view */
       font-weight: bold;
       color: #2c3e50;
-      margin: 10px 0;
+      margin: 5px 0;
     }
     
     .tower {
       display: flex;
       flex-direction: column-reverse;
-      gap: 5px;
+      gap: 3px;
       background-color: #fff;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      padding: 5px;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
     }
     
     .floor {
       display: flex;
-      gap: 5px;
-      padding: 8px;
+      gap: 1px; /* Reduced gap for compactness */
+      padding: 5px;
       background-color: #e8eaf6;
-      border-radius: 5px;
+      border-radius: 4px;
       align-items: center;
     }
     
     .floor-number {
-      width: 100px;
+      width: 60px; /* Adjusted width for compactness */
       font-weight: bold;
       color: #3f51b5;
-      font-size: 0.9em;
+      font-size: 0.7em;
     }
     
     .flats {
       display: flex;
-      gap: 5px;
+      gap: 1px; /* Reduced gap for compactness */
     }
     
     .flat {
       background-color: #3f51b5;
       color: white;
-      padding: 8px;
-      border-radius: 5px;
-      min-width: 70px;
+      padding: 5px;
+      border-radius: 4px;
+      min-width: 60px;
       text-align: center;
       transition: all 0.3s;
       position: relative;
-      font-size: 0.9em;
-      padding-top: 15px; /* Added to make room for the house icon */
+      font-size: 0.7em;
+      cursor: pointer;
+      display: inline-block;
+        z-index: 1; /* Adjust z-index for stacking context */
     }
 
     .flat:hover {
       transform: scale(1.05);
-      cursor: pointer;
+	  z-index: 10; /* Ensure hover effect is above adjacent tiles */
+    }
+
+    .flat:hover .owner-name {
+      visibility: visible;
+      opacity: 1;
     }
 
     .lit {
       background-color: #ffd700;
       color: #000;
-      box-shadow: 0 0 20px #ffeb3b;
+      box-shadow: 0 0 15px #ffeb3b;
       animation: glow 1.5s infinite alternate;
     }
 
     .diya {
       position: absolute;
-      top: -15px;
-      left: 30%;
+      top: -12px;
+      left: 50%;
       transform: translateX(-50%);
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .home {
       position: absolute;
-      top: -15px;
-      right: 10px; /* Modified to be consistently on the right */
-      font-size: 16px; /* Slightly reduced size */
+      top: -12px;
+      left: 10px;
+      font-size: 14px;
+    }
+
+    .owner-name {
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #fff;
+      color: #000;
+      padding: 5px 8px;
+      border-radius: 3px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+      font-size: 1em; /* Maintained for better readability */
+      white-space: nowrap;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0s, opacity 0.3s linear;
+      display: flex;
+      align-items: center;
+      z-index: 20; /* Ensures owner name is on top */
+    }
+
+    .owner-name::before {
+      content: '👤'; /* Added user icon */
+      margin-right: 5px;
+      font-size: 1.2em;
+      vertical-align: middle;
     }
 
     @keyframes glow {
       from {
-        box-shadow: 0 0 10px #ffeb3b;
+        box-shadow: 0 0 8px #ffeb3b;
       }
       to {
-        box-shadow: 0 0 20px #ffeb3b, 0 0 30px #ffd700;
+        box-shadow: 0 0 15px #ffd700, 0 0 20px #ffd700;
       }
     }
     
@@ -133,7 +182,10 @@
   </style>
 </head>
 <body>
-  <h1>Myhome Abhra Donation Status. Once you donate your flat will lit up with 🪔</h1>
+  <h1>Myhome Abhra Donation Status</h1>
+  <div class="description">Once you donate, your flat will light up with 🪔</div>
+  <div id="totalDonations">Total donated flats: 0 / 387</div>
+
   <div class="towers-container" id="towersContainer"></div>
 
   <script>
@@ -144,19 +196,429 @@
       'D': 5,
       'E': 5
     };
+
+    const flatOwners = {
+'A0001',: 'Ms. Soha Mohammad',
+'A0002',: 'Deepak Basavaraju',
+'A0003',: 'Mr.Chatla Sanjeev Kumar',
+'A0101',: 'Jayashree Sahoo',
+'A0102',: 'Sravanthi Juluri',
+'A0103',: 'VIDYA SAGAR Narang',
+'A0104',: 'V.Gangadhar Rao',
+'A0105',: 'Hrishikesh Mohile',
+'A0201',: 'Debasis Sahu',
+'A0202',: 'Gaurav Gupta',
+'A0203',: 'Annavarapu Siva Prasad',
+'A0204',: 'Kanta Narang',
+'A0205',: 'Gajula Venkata Yugandhar',
+'A0301',: 'Barlapudi Ravi Kiran',
+'A0301',: 'shivani',
+'A0302',: 'Dr  Venugopal Arroju',
+'A0303',: 'Neetu Prasad',
+'A0303',: 'Rajesh Kumar',
+'A0303',: 'Ram Swarup Prasad',
+'A0304',: 'Mallu Govardhan Reddy',
+'A0305',: 'Nagarathna Hosamane',
+'A0401',: 'P Venugopal',
+'A0402',: 'Papatla Sreenivasa Moorthy',
+'A0403',: 'Karan Agarwal',
+'A0404',: 'Sakaar Anand',
+'A0405',: 'Dinaz Noria',
+'A0501',: 'Ram Mattegunta',
+'A0502',: 'Vaddey Sri Visweswara Prasad',
+'A0502',: 'Prasad Vaddey',
+'A0503',: 'V.Kalyan Kumar',
+'A0504',: 'S.Shushma',
+'A0505',: 'Naresh Kumar Rawal',
+'A0601',: 'Lokanayaki Rani Vipprathi',
+'A0602',: 'Vasireddi Nagarajendra Prasad',
+'A0603',: 'Navindra Goel',
+'A0604',: 'Krishna K.Venkatesh',
+'A0605',: 'Devender chava',
+'A0605',: 'Raghotma Chava',
+'A0701',: 'Rahul Vipparthi',
+'A0702',: 'Ms.MAQ Softwere Hyderabad P...',
+'A0703',: 'Ms.MAQ Softwere Hyderabad P...',
+'A0703',: 'Operations Team',
+'A0704',: 'Ramakrishna Momidi',
+'A0705',: 'Mrs. Deepika Chanamolu',
+'A0801',: 'Pradeep Allena',
+'A0802',: 'Mr.Uttam Patel',
+'A0803',: 'Metapalli Gopi krishna/ MEGHALI RAY',
+'A0804',: 'M. K Rahaman',
+'A0804',: 'Yasmin Zohra',
+'A0805',: 'Seshaphani Setty Soma',
+'A0901',: 'Commander Venkat SRM',
+'A0903',: 'K.V.S.Chandra Shekar',
+'A0904',: 'Banda Vamshikrishna Reddy',
+'A0904',: 'VAMSHI BANDA',
+'A0905',: 'A.Bhupathi Rao',
+'A1001',: 'G. V. Laxman Rao',
+'A1001',: 'Vipraja',
+'A1002',: 'V. Satya Sreevalli Josyabhatla',
+'A1003',: 'Saikat Majumdar',
+'A1004',: 'Dr. P. Manoj Chakravorthy',
+'A1101',: 'Mr. Manish Shroff/D S CHAUHAN',
+'A1102',: 'Mr. Marthineni Sridhar Babu',
+'A1103',: 'S.Satyam Reddy',
+'A1104',: 'Revathi Puppala',
+'A1105',: 'S.Vijay Lakshmi',
+'A1201',: 'Sunaina Poddar',
+'A1202',: 'Madavarapu Ravi Karan',
+'A1203',: 'Dr. K. Lahiri',
+'A1204',: 'K.Linga Reddy',
+'A1205',: 'P. Gopichand',
+'A1301',: 'Sai Ramana Ponugoti',
+'A1302',: 'Padmaja Mullapudi',
+'A1303',: 'Y.Shankar',
+'A1304',: 'T. Harish',
+'A1305',: 'Ankathi Sravan kumar',
+'A1401',: 'Kuchimanchi Balasubramanyam',
+'A1402',: 'Kiran Kumar',
+'A1403',: 'Harshil Gupta',
+'A1403',: 'Nithu Gupta',
+'A1404',: 'Pooja Lalitha Rudraraju',
+'A1405',: 'K.Chidamber Rao',
+'A1501',: 'M.S.R. Kali Prasad',
+'A1501',: 'Dinaz Noria',
+'A1502',: 'Mr.Kapil Takkalapally',
+'A1503',: 'Anjali shah',
+'A1504',: 'S V S B Shankar',
+'A1504',: 'S.Kusuma',
+'A1505',: 'Chitamaneni Lakshmi Kumari',
+'A1601',: 'Venkata Kiran Chand  Bobba',
+'A1602',: 'Swetha Rao Gone/ S N RAO',
+'A1603',: 'Sandadi Ravinder Reddy',
+'A1604',: 'Manish Bajaj',
+'A1605',: 'M.Vishnu Prasad',
+'A1701',: 'G H Reddy',
+'A1702',: 'Viswanatha Raju Dandu',
+'A1703',: 'Swathi Kallepu',
+'A1704',: 'nischala',
+'A1705',: 'G.V.S Bharath',
+'B0001',: 'Nagarjun vutukuri',
+'B0002',: 'Dr.Arpitha Reddy Saluguti',
+'B0003',: 'Indrasen Reddy Gummalla',
+'B0003',: 'Vangala Sujatha',
+'B0004',: 'Mr. Hari Krishna Jeedipalli',
+'B0004',: 'Nivedita Rao',
+'B0101',: 'Prem Arora',
+'B0102',: 'Padmaja B',
+'B0103',: 'Mrs.Sri Lakshmi Rao Ponnala',
+'B0103',: 'Sri Lakshmi Rao P',
+'B0104',: 'Mr.V.S.N.Narayana Kumar',
+'B0105',: 'Simhadri Swathi',
+'B0201',: 'Saswata Kundu',
+'B0202',: 'Mr. Jyoti Baba.P',
+'B0202',: 'vijayalakshmi',
+'B0202',: 'P. Vijayalakshmi',
+'B0203',: 'Ms.Jupally Srilaxmi',
+'B0204',: 'Pavan K Dinavahi',
+'B0205',: 'Mrs.B.Sravani',
+'B0301',: 'K.V.R.N Raju',
+'B0302',: 'Peesapati Venkat Ramana',
+'B0303',: 'Allu Neelima Devi/RAVI KRISHNA',
+'B0304',: 'Y.Kishore',
+'B0305',: 'Mr.Gandhi kantheti',
+'B0401',: 'Punna Sree Rangam',
+'B0402',: 'Mr. G. Ajay Naidu',
+'B0402',: 'Anand',
+'B0403',: 'Vinay kumar gupta',
+'B0404',: 'Mr. Raj Gunturu',
+'B0404',: 'Madhavi',
+'B0405',: 'Capt CK.Veeresh',
+'B0501',: 'Pramila Thomas',
+'B0502',: 'Ajay Babu Muvva',
+'B0503',: 'Sandilya Vadapally',
+'B0504',: 'R.Madubala L Kasturbai',
+'B0505',: 'Sudhir Potay',
+'B0601',: 'Gautam Jain/ NAMITHA',
+'B0602',: 'Harmeet Kaur',
+'B0603',: 'Mr. Anmol Sharda',
+'B0603',: 'Vallabh Sharada',
+'B0605',: 'Dr.K.Parvathi',
+'B0701',: 'Mr. M. Vishnuvardhan Reddy',
+'B0702',: 'Rajesh Sharma',
+'B0703',: 'Shirisha Kalakuntla',
+'B0704',: 'P.Vasudeva Rao',
+'B0705',: 'R.Madubala L Kasturbai',
+'B0801',: 'Venkata Narsimha Rao Gummadi',
+'B0802',: 'Srinivas Javvadi',
+'B0803',: 'Mr. Kathiravan Ganesan',
+'B0804',: 'Mr. Nikhil Suresh Ghadyalpatil',
+'B0805',: 'Ms. Rupal Vithlani',
+'B0901',: 'Philipose K G',
+'B0902',: 'Thota Nagadhar',
+'B0904',: 'C.V.K.Raju',
+'B0904',: 'Raju Chintalapati Venkata K...',
+'B0905',: 'Anantha Subramanian',
+'B1001',: 'Mr. Sunil Sachan',
+'B1002',: 'R. Padma Kumari',
+'B1002',: 'R.Ravi Kumar',
+'B1002',: 'Manoj Ramanulla',
+'B1003',: 'Aastha sankrityayan',
+'B1004',: 'Rama Churiwala',
+'B1005',: 'Purushotham Mallela',
+'B1101',: 'Mr. Diwakar Yadavalli',
+'B1102',: 'Abrar Mahboob',
+'B1103',: 'Saran Chand Agarwal',
+'B1104',: 'Mr. Raju S.V.L.N. Penmetsa',
+'B1105',: 'Suryanarayana N.V',
+'B1201',: 'Y S Nandan',
+'B1202',: 'Sairam V. Pamulapati',
+'B1203',: 'Mr.Bolla Papi Reddy',
+'B1204',: 'B.M.V. VARA LAKSHMI',
+'B1205',: 'K. Sai Chandra Sekhar',
+'B1301',: 'Durga Reddy',
+'B1302',: 'B Sunil Kumar',
+'B1303',: 'Kambhammettu Vijay',
+'B1304',: 'Suhas',
+'B1305',: 'Mr.Naveen',
+'B1401',: 'Mr. M. Srinivas Reddy',
+'B1402',: 'P. Srinivas Reddy',
+'B1403',: 'Arun N',
+'B1404',: 'Sree Hari Gaduputi',
+'B1404',: 'Dr. A. Purnanand',
+'B1405',: 'Rachana Nallur',
+'B1501',: 'Phani Kumar K',
+'B1502',: 'Jupally Bhargavi',
+'B1503',: 'sandeep polsani',
+'B1503',: 'Sandeep Polsani',
+'B1504',: 'Mr. V. Raghu Shankar Reddy',
+'B1505',: 'Radhika',
+'B1601',: 'Gorur srinivas srinath',
+'B1602',: 'Mr. K. Chandra Sekhar Rao',
+'B1603',: 'Mr. C.V . Raghu',
+'B1604',: 'Mrs.D.Venkatalakshmi',
+'B1604',: 'D.Venkatalakshmi',
+'B1605',: 'Leela Raju',
+'B1701',: 'Pavan Kumar Nalamothu',
+'B1702',: 'Madhubala Tangeda',
+'B1703',: 'Mrs. B. Sirisha',
+'B1704',: 'Mrs. A. Sobha Rani',
+'B1705',: 'Dr. Bhaskar Madekar',
+'C0101',: 'Mrs.Rani Isola',
+'C0201',: 'Sanjeev Kumar Chatla',
+'C0202',: 'Mr.Vikram Vuppala',
+'C0301',: 'Ganapathi Rao',
+'C0302',: 'Mr.Kallam Sridhar Prasad Reddy',
+'C0401',: 'Nagarathna Hosamane',
+'C0402',: 'Mr.Renuka raju',
+'C0501',: 'Ms. Geeta Gupta',
+'C0502',: 'Nikhil Khanna',
+'C0601',: 'Radhika Atluri',
+'C0601',: 'Vijay Atluri',
+'C0602',: 'Mrs. Usha Idupuganti',
+'C0701',: 'Mr. Phani Kumar Pilli',
+'C0702',: 'A.Sudarshan Reddy',
+'C0801',: 'Nameet Baldwa',
+'C0802',: 'Mr.Rajesh Kumar Agarwal',
+'C0901',: 'VL Rani',
+'C0902',: 'Ramesh Kumar P',
+'C1001',: 'Sasirekha Pakkala',
+'C1002',: 'Krishna Chaitanya Reddy',
+'C1101',: 'Dr. Prakash',
+'C1102',: 'CH.Vijay Kumar',
+'C1201',: 'Mr.Dinesh Kumar',
+'C1202',: 'Unnam Sriharsha',
+'C1301',: 'K Bhaskar Reddy &  K Uma',
+'C1302',: 'Mr.Ramu Ravuri',
+'C1401',: 'B.SUMANTH',
+'C1402',: 'B.S.Basivi Reddy',
+'C1501',: 'Ram Manohar Naidu Dharmana',
+'C1502',: 'G.Hussain Reddy',
+'C1601',: 'Shah Rudraraju',
+'C1601',: 'Mr. Nitin Bandi',
+'C1602',: 'Tejender Kumar Agarwal',
+'C1701',: 'Mrs. A Swapna',
+'C1702',: 'Ramesh  Munuru',
+'D0002',: 'R Chandra Sekhar',
+'D0003',: 'Ajay Gupta',
+'D0004',: 'SriKrishna Kulkarni',
+'D0005',: 'Venuri Hanumanth Rao',
+'D0101',: 'Mr.S.V.N.N.Prasad Rao',
+'D0102',: 'Mr Rajesh Nair',
+'D0103',: 'Mrs.Koduri Padmaja',
+'D0105',: 'Mrs.Mahitha Ramineni',
+'D0201',: 'Mr.Babbula Vamshi',
+'D0202',: 'G. A. R. V Surya Teja',
+'D0203',: 'Chandra priyanka',
+'D0204',: 'Sarpa Sagaram',
+'D0205',: 'Mr.Rajulu Ponnada',
+'D0301',: 'Rajiv Nemuri',
+'D0302',: 'Mr. J. Jagan Mohan Rao',
+'D0303',: 'Mr.Rajesh Chanda',
+'D0304',: 'Mrs. Sunita Manuballa',
+'D0305',: 'Mrs. K. V. Padma',
+'D0401',: 'Sangu Krishna Chaitanya',
+'D0402',: 'RSN Raju',
+'D0403',: 'J.Madhava rao',
+'D0404',: 'S.Shilpa Raju',
+'D0405',: 'B.Sugunakar rao',
+'D0501',: 'Sanjeev kota',
+'D0502',: 'Vasudeva Srinivas Gadde',
+'D0503',: 'Anuradha Alluri',
+'D0504',: 'Sudhakar Pennam',
+'D0505',: 'Mr. Ramesh Venkata Peri',
+'D0601',: 'Mr. Dhavala Surya Prakash Rao',
+'D0602',: 'Shri SANJAY PUSARLA',
+'D0603',: 'K.Raghava Reddy',
+'D0604',: 'Raghu Polasani',
+'D0605',: 'Abbineni Murali Ramana Kumar',
+'D0701',: 'Sarath',
+'D0702',: 'Swetambari C.',
+'D0703',: 'Mr. K. Ganesh',
+'D0704',: 'Dr. Azra Nishat',
+'D0705',: 'Mr. Mantha Balaji Sharma',
+'D0801',: 'Mrs.M.Sathya',
+'D0803',: 'K.Shalini',
+'D0804',: 'Chakkilam Rajeswari',
+'D0805',: 'Mr. Vedula Mallikarjuna Rao',
+'D0901',: 'L.N.Rao',
+'D0902',: 'B.Jaya Rama Rao',
+'D0903',: 'Yalavarthy Anitha',
+'D0904',: 'Chakkilam Srikanth',
+'D0905',: 'Mr. I. Ramakrishna Anil Kumar',
+'D1001',: 'Mr. Gantasala Jagannadha Rao',
+'D1002',: 'Mrs. Kodali. Padmaja',
+'D1003',: 'Mr. Rajeshwer Rao Kokkirala',
+'D1004',: 'Dr.Madhukar.N',
+'D1005',: 'P.V.Subrahmanyam',
+'D1101',: 'Mr. M Ramesh Babu',
+'D1102',: 'K.Sandhya',
+'D1103',: 'Markili Urmila',
+'D1104',: 'Dr. Sirisha Balmuri',
+'D1105',: 'D.Sivaramakrishna Reddy',
+'D1201',: 'Yogendra Singh Verma',
+'D1202',: 'A. Srinivasa Rao',
+'D1202',: 'renuka aravapalli',
+'D1203',: 'Bollepalli Uma Maheswara Rao',
+'D1204',: 'Mssrs. Ayyappa Infra Projec...',
+'D1301',: 'N.Sri Lahari',
+'D1302',: 'Surapaneni Subramanya Prasad',
+'D1303',: 'Mrs. Manjula Reddy Bethi',
+'D1304',: 'Venkat Reddy Yerredla',
+'D1305',: 'Mantha Narayana Murthy',
+'D1401',: 'Mr. Shanti Sagar Adabala',
+'D1402',: 'Padma Byrraju',
+'D1403',: 'Potlapalli Amuktha',
+'D1404',: 'Dr.P.Narendranath',
+'D1405',: 'Narsing Raj Gowlikar',
+'D1501',: 'Mr.Jonnalagadda Anjaiah',
+'D1502',: 'Dr. Kothari Srinivasa Suhasini',
+'D1503',: 'Mr. Anil Venkata Gurana',
+'D1504',: 'P.Venkatram Reddy',
+'D1505',: 'S.Rajagopalan',
+'D1601',: 'Polineni Narasimha Rao',
+'D1602',: 'Dr.Gopi Krishna Amaravadi',
+'D1603',: 'Sailaxmi Yella',
+'D1604',: 'Mr. A. Ram Mohan Rao',
+'D1605',: 'Mr. Annamneni Shiva Kiran',
+'D1701',: 'Mr. Dharam Paul Sabharwal',
+'D1702',: 'Kvreddy',
+'D1703',: 'Mr.Thout Reddy Hruday Kumar...',
+'D1704',: 'Hima Pallempati',
+'D1705',: 'Mr. Murali Krishna Kolluri',
+'E0003',: 'Amireddy Sneha Reddy',
+'E0004',: 'Subramanyam Boyinapalli',
+'E0005',: 'DEEPAK GARG',
+'E0101',: 'Pratibha jain',
+'E0102',: 'Jayasree Muttaluru',
+'E0103',: 'Mrs. A.Krishna Priya',
+'E0104',: 'Mr. Ghanshyam Pandey',
+'E0105',: 'Ashish Karwedkar',
+'E0201',: 'Mrs. Siddam Madhavi',
+'E0202',: 'Siddhartha Reddy Arimanda',
+'E0203',: 'Thirumala Shakunthala',
+'E0204',: 'Dr.K.K.V.Chary',
+'E0205',: 'Nikhil Chug',
+'E0301',: 'Mr. CH. Srinivasa Rao',
+'E0301',: 'NIHAL RAO',
+'E0302',: 'Joshi Alaparthi',
+'E0303',: 'Mr.Santanu Mukherjee',
+'E0304',: 'Gollapudi V.M.Krishna',
+'E0305',: 'Venu Gopal  Chintada',
+'E0401',: 'Mr.Ayush Khetan',
+'E0402',: 'Girish Chandra Dube',
+'E0403',: 'V.Lakshmi Narayana',
+'E0404',: 'Mrs. K. Deepthi Reddy',
+'E0405',: 'Murali Tripuraneni',
+'E0501',: 'Neelam Ranka',
+'E0503',: 'R.V.G.Kulkarni',
+'E0504',: 'Swamy Naidu Vaddey',
+'E0505',: 'Yuvraj Sahni',
+'E0601',: 'Manisha Gupta',
+'E0602',: 'Raghu Pervela',
+'E0603',: 'Mr.Vamsi Krishna Devara',
+'E0604',: 'Sampath Kumar Reddy Yeruva',
+'E0605',: 'Dr. V Chandra Chud',
+'E0701',: 'Mr.A K Gupta',
+'E0702',: 'Mr. J. Chandra Sekhar',
+'E0703',: 'Ch.Vidyasagar Rao',
+'E0704',: 'Radhika Chintalapally',
+'E705',: 'Vinay Kumar/Balkishan Agarwal (E-705)',
+'E0705',: 'Ranjan Kumar Roy Chowdhury',
+'E0801',: 'Y.Uma bindu',
+'E0802',: 'Mrs. Mala Ranjan',
+'E0803',: 'Rajesh Gudapati',
+'E0804',: 'Ramesh Gudapuri',
+'E0805',: 'Nadendla Samba Siva Rao',
+'E0901',: 'kalyan babu G',
+'E0902',: 'Sreehari Babu',
+'E0903',: 'Ms. CH. Tejaswi',
+'E0904',: 'Mr. Indulluri Vijay Kumar Raju',
+'E0905',: 'Akash Nahata',
+'E1001',: 'Palakurthy Saritha',
+'E1002',: 'V.V.H Srinivasa Murty',
+'E1003',: 'Mrs. K. Vasudha',
+'E1004',: 'Mr. Kallepu Narsinga Rao',
+'E1005',: 'Mr. K. Surya Prakash',
+'E1101',: 'Thosini Sri Kodali',
+'E1102',: 'K.S.Prasad Reddy',
+'E1103',: 'Mr.T Kiran Kumar',
+'E1104',: 'T.Suresh',
+'E1105',: 'Venkata Narayana M.',
+'E1201',: 'Kanumuru Ravindra Reddy',
+'E1202',: 'Mr.Kirti Kumar Nanji Gala',
+'E1203',: 'Mr. Ramadhar Singh',
+'E1204',: 'Nallapati Sri Ramulu',
+'E1205',: 'Mr. T. Sampath Rao',
+'E1301',: 'Lalita Palakodeti',
+'E1302',: 'Sri Rama Krishna Prasad Sad...',
+'E1303',: 'Mrs.V.Prameela',
+'E1304',: 'Ravi Suraneni',
+'E1305',: 'Mr. Rama Krishna Namburu',
+'E1401',: 'Sridevi',
+'E1402',: 'Siva Rama Raju Kalidindi',
+'E1403',: 'Mr. Debashis Basu',
+'E1404',: 'Mr. Mahesh Mehta',
+'E1405',: 'Mr. Meka Sri Krishna',
+'E1405',: 'Meka Srikrishnabalalrosjbma...',
+'E1501',: 'Mr.Anand Krishnan',
+'E1502',: 'Mr.Vishal Gupta',
+'E1503',: 'Nihar',
+'E1504',: 'Dr.Vinu Ganti',
+'E1505',: 'Mr. Prabhakar Chittineni',
+'E1601',: 'Mr.Kartik Bansal',
+'E1602',: 'Mr. M. Jagan Mohan Rao',
+'E1603',: 'Papatla Sreenivasa Moorthy',
+'E1604',: 'Sharath Chander Kallepu',
+'E1605',: 'B.Dheeraj / Narsinga Rao',
+'E1701',: 'Ganesh',
+'E1702',: 'Uma Sagar',
+'E1703',: 'Mr. Sudhakar Reddy',
+'E1704',: 'Mr. K. Narsing Rao',
+'E1705',: 'Mr. Lokesh Nagpal',
+
+      // Add more flat owner data here
+    };
     
-    // Hardcoded lit flats
     const litFlats = new Set([
-      'A0101',	'A0103',	'A0202',	'A0404',	'A0504',	'A0603',	'A0604',	'A0803',	'A0904',	'A1004',	'A1303',	'A1402',	'A1602',	'A1604',  // Tower A
-      'B0101',	'B0303',	'B0702',	'B1004',	'B1104',	'B1201',	'B1302',	'B1501',	'B1505',  // Tower B
-      'C0201',	'C0501',	'C0801',	'C1201',	'C1301',	'C1302',	'C1402',	'C1502',	'C1701',          // Tower C
-      'D0003',	'D0005',	'D0102',	'D0404',	'D0501',	'D0502',	'D0702',	'D0804',	'D0805',	'D0904',	'D1201',	'D1304',	'D1402',	'D1602',	'D1705', // Tower D
-      'E0602',	'E0005',	'E0102',	'E0105',	'E0301',	'E0304',	'E0402',	'E0403',	'E0405',	'E0602',	'E0604',	'E0701',	'E0703',	'E705',	'E1101',	'E1105',	'E1203',	'E1204',	'E1404',	'E1405',	'E1502',	'E1605',  // Tower E
+      'A0101',	'A0103',	'A0202',	'A0203',	'A0302',	'A0404',	'A0502',	'A0504',	'A0602',	'A0603',	'A0604',	'A0803',	'A0904',	'A0904',	'A1004',	'A1101',	'A1103',	'A1303',	'A1402',	'A1502',	'A1505',	'A1601',	'A1602',	'A1604',	'B0101',	'B0303',	'B0601',	'B0702',	'B1004',	'B1104',	'B1201',	'B1302',	'B1501',	'B1505',	'C0201',	'C0501',	'C0801',	'C1201',	'C1202',	'C1301',	'C1302',	'C1402',	'C1502',	'C1701',	'D0003',	'D0005',	'D0102',	'D0204',	'D0404',	'D0501',	'D0502',	'D0702',	'D0804',	'D0805',	'D0901',	'D0904',	'D1201',	'D1304',	'D1402',	'D1504',	'D1602',	'D1705',	'E0003',	'E0005',	'E0102',	'E0105',	'E0301',	'E0301',	'E0304',	'E0402',	'E0403',	'E0405',	'E0503',	'E0505',	'E0602',	'E0604',	'E0701',	'E0703',	'E705',	'E0805',	'E1101',	'E1105',	'E1203',	'E1204',	'E1302',	'E1404',	'E1405',	'E1502',	'E1605',
     ]);
 
-				
+    const totalFlats = 387;
 
-    
     function padNumber(num) {
       return num.toString().padStart(2, '0');
     }
@@ -190,13 +652,16 @@
           flatDiv.className = `flat ${litFlats.has(flatNumber) ? 'lit' : ''}`;
           flatDiv.textContent = flatNumber;
           
-          // Add house icon to every flat
+          const ownerName = document.createElement('div');
+          ownerName.className = 'owner-name';
+          ownerName.textContent = flatOwners[flatNumber] || 'Owner Unknown';
+          flatDiv.appendChild(ownerName);
+
           const home = document.createElement('div');
           home.className = 'home';
           home.textContent = '🏠';
           flatDiv.appendChild(home);
           
-          // Add diya only to lit flats
           if (litFlats.has(flatNumber)) {
             const diya = document.createElement('div');
             diya.className = 'diya';
@@ -217,15 +682,13 @@
     }
 
     function updateTowers() {
-      const container = document.getElementById('towersContainer');
-      container.innerHTML = '';
-      
+      document.getElementById('towersContainer').innerHTML = '';
       for (const [towerName, flatsPerFloor] of Object.entries(towerConfigs)) {
-        container.appendChild(createTower(towerName, flatsPerFloor));
+        document.getElementById('towersContainer').appendChild(createTower(towerName, flatsPerFloor));
       }
+      document.getElementById('totalDonations').textContent = `Total donated flats: ${litFlats.size} / ${totalFlats}`;
     }
 
-    // Initialize the towers
     updateTowers();
   </script>
 </body>
