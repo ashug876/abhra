@@ -34,6 +34,15 @@
       margin-bottom: 20px;
     }
 
+    #towerNameHeader {
+      background-color: royalblue;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
     .towers-container {
       display: flex;
       gap: 10px;
@@ -48,7 +57,7 @@
     }
 
     .tower-name {
-      font-size: 1em; /* Smaller for compact view */
+      font-size: 1em;
       font-weight: bold;
       color: #2c3e50;
       margin: 5px 0;
@@ -67,7 +76,7 @@
     
     .floor {
       display: flex;
-      gap: 1px; /* Reduced gap for compactness */
+      gap: 1px;
       padding: 5px;
       background-color: #e8eaf6;
       border-radius: 4px;
@@ -75,7 +84,7 @@
     }
     
     .floor-number {
-      width: 60px; /* Adjusted width for compactness */
+      width: 60px;
       font-weight: bold;
       color: #3f51b5;
       font-size: 0.7em;
@@ -83,7 +92,7 @@
     
     .flats {
       display: flex;
-      gap: 1px; /* Reduced gap for compactness */
+      gap: 1px;
     }
     
     .flat {
@@ -93,98 +102,78 @@
       border-radius: 4px;
       min-width: 60px;
       text-align: center;
-      transition: all 0.3s;
-      position: relative;
       font-size: 0.7em;
       cursor: pointer;
+      position: relative;
       display: inline-block;
-        z-index: 1; /* Adjust z-index for stacking context */
+    }
+
+    .flat.lit {
+      background-color: #ffd700;
+      color: #000;
+      box-shadow: 0 0 15px #ffeb3b;
+      font-weight: bold;
+    }
+
+    .flat.lit::after {
+      content: " 🪔";
+    }
+
+    .flat.inactive {
+      background-color: #d3d3d3 !important;
+      color: #a0a0a0 !important;
+      pointer-events: none;
+    }
+
+    
+    .ground-floor {
+      background-color: #f5f5f5;
+      /* border removed */
+    }
+
+    .tower-stats {
+      font-size: 0.9em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      background-color: indianred;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
     }
 
     .flat:hover {
       transform: scale(1.05);
-	  z-index: 10; /* Ensure hover effect is above adjacent tiles */
+      z-index: 10; /* Ensure hover effect is above adjacent tiles */
+    }
+
+    .owner-name {
+      visibility: hidden;
+      opacity: 0;
+      background-color: black;
+      color: white;
+      text-align: center;
+      padding: 5px;
+      border-radius: 5px;
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      transition: opacity 0.3s;
     }
 
     .flat:hover .owner-name {
       visibility: visible;
       opacity: 1;
     }
-
-    .lit {
-      background-color: #ffd700;
-      color: #000;
-      box-shadow: 0 0 15px #ffeb3b;
-      animation: glow 1.5s infinite alternate;
-    }
-
-    .diya {
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 18px;
-    }
-
-    .home {
-      position: absolute;
-      top: -12px;
-      left: 10px;
-      font-size: 14px;
-    }
-
-    .owner-name {
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #fff;
-      color: #000;
-      padding: 5px 8px;
-      border-radius: 3px;
-      box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-      font-size: 1em; /* Maintained for better readability */
-      white-space: nowrap;
-      visibility: hidden;
-      opacity: 0;
-      transition: visibility 0s, opacity 0.3s linear;
-      display: flex;
-      align-items: center;
-      z-index: 20; /* Ensures owner name is on top */
-    }
-
-    .owner-name::before {
-      content: '👤'; /* Added user icon */
-      margin-right: 5px;
-      font-size: 1.2em;
-      vertical-align: middle;
-    }
-
-    @keyframes glow {
-      from {
-        box-shadow: 0 0 8px #ffeb3b;
-      }
-      to {
-        box-shadow: 0 0 15px #ffd700, 0 0 20px #ffd700;
-      }
-    }
     
-    .ground-floor {
-      background-color: #f5f5f5;
-      /* border: 2px solid #3f51b5; */
-    }
-    
-    @media (max-width: 1200px) {
-      .towers-container {
-        flex-direction: column;
-      }
-    }
   </style>
 </head>
 <body>
-  <h1>Myhome Abhra Donation Status</h1>
+  <h1>Myhome Abhra Temple Donation Status</h1>
   <div class="description">Once you donate, your flat will light up with 🪔</div>
-  <div id="totalDonations">Total donated flats: 0 / 387</div>
+  <div id="totalDonations">Total donated flats: 0 / 387 (0%)</div>
 
   <div class="towers-container" id="towersContainer"></div>
 
@@ -197,7 +186,31 @@
       'E': 5
     };
 
-    const flatOwners = {
+    const inactiveFlats = new Set([
+      'A0004', 'A0005', 'B0005', 'D0001', 'E0001', 'E0002',
+      'C0001', 'C0002', 'C0102'
+    ]);
+
+    const litFlats = new Set([
+      	'A0101', 'A0103', 'A0202', 'A0203', 'A0302', 'A0304', 'A0402', 'A0404', 
+	'A0502', 'A0504', 'A0602', 'A0603', 'A0604', 'A0801', 'A0803', 
+	'A0805', 'A0904', 'A0904', 'A1001', 'A1004', 'A1101', 'A1103',	
+	'A1303', 'A1402', 'A1403', 'A1502', 'A1505', 'A1601', 'A1602', 
+	'A1604', 'B0002', 'B0004', 'B0101', 'B0202', 'B0303', 'B0404', 
+	'B0601', 'B0702', 'B0703', 'B1004', 'B1104', 'B1201', 'B1302', 'B1501', 'B1505',	
+	'C0201', 'C0501', 'C0502', 'C0801', 'C1201', 'C1202', 'C1301', 'C1302', 
+	'C1402', 'C1502', 'C1701', 'D0003', 'D0005', 'D0102', 'D0104', 
+	'D0204', 'D0404', 'D0501', 'D0502', 'D0601', 'D0604',	
+	'D0702', 'D0703', 'D0801', 'D0804', 'D0805', 'D0901', 'D0902', 
+	'D0904', 'D1201', 'D1304', 'D1402', 'D1504', 'D1602', 'D1604', 'D1705', 
+	'E0003', 'E0005', 'E0102', 'E0105', 'E0301', 'E0301',	
+	'E0304', 'E0402', 'E0403', 'E0405', 'E0503', 'E0505', 'E0602', 
+	'E0604', 'E0701', 'E0703', 'E0705', 'E0805', 'E0905', 'E1101', 
+	'E1105', 'E1203', 'E1204', 'E1302', 'E1303',	
+	'E1404', 'E1405', 'E1502', 'E1605',
+    ]);
+
+const flatOwners = {
 'A0001' : 'Ms. Soha Mohammad',
 'A0002' : 'Deepak Basavaraju',
 'A0003' : 'Mr.Chatla Sanjeev Kumar',
@@ -610,91 +623,77 @@
 'E1704' : 'Mr. K. Narsing Rao',
 'E1705' : 'Mr. Lokesh Nagpal',
 
+
       // Add more flat owner data here
     };
     
-    const litFlats = new Set([
-      	    'A0101',	'A0103',	'A0202',	'A0203',	'A0302',	'A0402',	'A0404',	'A0502',	'A0504',	'A0602',	'A0603',	'A0604',	'A0801', 	'A0803',	'A0805',	'A0904',	'A0904',	'A1004',	'A1101',	'A1103',	
-	    'A1303',	'A1402',	'A1403',	'A1502',	'A1505',	'A1601',	'A1602',	'A1604',	'B0002',	'B0004', 	'B0101',	'B0202',	'B0303',	'B0404', 	'B0601',	'B0702',	'B1004',	'B1104',	'B1201',	'B1302',	'B1501',	'B1505',	
-	    'C0201',	'C0501',	'C0801',	'C1201',	'C1202',	'C1301',	'C1302',	'C1402',	'C1502',	'C1701',	'D0003',	'D0005',	'D0102',	'D0104',	'D0204',	'D0404',	'D0501',	'D0502',	'D0601',	'D0604',	
-	    'D0702',	'D0703',	'D0801',	'D0804',	'D0805',	'D0901',	'D0902',	'D0904',	'D1201',	'D1304',	'D1402',	'D1504',	'D1602',	'D1705',	'E0003',	'E0005',	'E0102',	'E0105',	'E0301',	'E0301',	
-	    'E0304',	'E0402',	'E0403',	'E0405',	'E0503',	'E0505',	'E0602',	'E0604',	'E0701',	'E0703',	'E705',		'E0805',	'E0905',	'E1101',	'E1105',	'E1203',	'E1204',	'E1302',	
-	    'E1404',	'E1405',	'E1502',	'E1605',
-    ]);
-
-    const totalFlats = 387;
-
     function padNumber(num) {
       return num.toString().padStart(2, '0');
     }
 
+    const overalllitPercentage = ((litFlats.size / 387) * 100).toFixed(2);
+    
     function createTower(towerName, flatsPerFloor) {
       const towerWrapper = document.createElement('div');
       towerWrapper.className = 'tower-wrapper';
+
+      const totalFlats = 18 * flatsPerFloor - [...inactiveFlats].filter(f => f.startsWith(towerName)).length;
+      const litCount = [...litFlats].filter(f => f.startsWith(towerName)).length;
+      const litPercentage = ((litCount / totalFlats) * 100).toFixed(2);
+
+      const towerNameHeader = document.createElement('div');
+      towerNameHeader.id = 'towerNameHeader';
+      towerNameHeader.textContent = 'Tower: ' + towerName;
+      towerWrapper.appendChild(towerNameHeader);
       
-      const towerNameDiv = document.createElement('div');
-      towerNameDiv.className = 'tower-name';
-      towerNameDiv.textContent = `Tower ${towerName}`;
-      towerWrapper.appendChild(towerNameDiv);
-      
+      const towerStats = document.createElement('div');
+      towerStats.className = 'tower-stats';
+      towerStats.textContent = `Lit Flats: ${litCount} / ${totalFlats} (${litPercentage}%)`;
+      towerWrapper.appendChild(towerStats);
+
       const tower = document.createElement('div');
       tower.className = 'tower';
-      
+
       for (let floor = 0; floor <= 17; floor++) {
         const floorDiv = document.createElement('div');
         floorDiv.className = `floor ${floor === 0 ? 'ground-floor' : ''}`;
-        
-        const floorNumber = document.createElement('div');
-        floorNumber.className = 'floor-number';
-        floorNumber.textContent = `Floor ${floor}`;
-        
+
         const flatsDiv = document.createElement('div');
         flatsDiv.className = 'flats';
-        
-        for (let flat = 1; flat <= flatsPerFloor; flat++) {
-          const flatDiv = document.createElement('div');
-          const flatNumber = `${towerName}${padNumber(floor)}${padNumber(flat)}`;
-          flatDiv.className = `flat ${litFlats.has(flatNumber) ? 'lit' : ''}`;
-          flatDiv.textContent = flatNumber;
-          
-          const ownerName = document.createElement('div');
-          ownerName.className = 'owner-name';
-          ownerName.textContent = flatOwners[flatNumber] || 'Owner Unknown';
-          flatDiv.appendChild(ownerName);
 
-          const home = document.createElement('div');
-          home.className = 'home';
-          home.textContent = '🏠';
-          flatDiv.appendChild(home);
-          
-          if (litFlats.has(flatNumber)) {
-            const diya = document.createElement('div');
-            diya.className = 'diya';
-            diya.textContent = '🪔';
-            flatDiv.appendChild(diya);
-          }
+        for (let flat = 1; flat <= flatsPerFloor; flat++) {
+          const flatNumber = `${towerName}${padNumber(floor)}${padNumber(flat)}`;
+          const flatDiv = document.createElement('div');
+          flatDiv.className = `flat ${litFlats.has(flatNumber) ? 'lit' : ''} ${inactiveFlats.has(flatNumber) ? 'inactive' : ''}`;
+          flatDiv.textContent = flatNumber;
+
+                if (flatOwners[flatNumber]) {
+        const ownerDiv = document.createElement('div');
+        ownerDiv.className = 'owner-name';
+        ownerDiv.textContent = flatOwners[flatNumber];
+        flatDiv.appendChild(ownerDiv);
+      }
           
           flatsDiv.appendChild(flatDiv);
         }
-        
-        floorDiv.appendChild(floorNumber);
+
         floorDiv.appendChild(flatsDiv);
         tower.appendChild(floorDiv);
       }
-      
+
       towerWrapper.appendChild(tower);
       return towerWrapper;
     }
 
-    function updateTowers() {
-      document.getElementById('towersContainer').innerHTML = '';
-      for (const [towerName, flatsPerFloor] of Object.entries(towerConfigs)) {
-        document.getElementById('towersContainer').appendChild(createTower(towerName, flatsPerFloor));
-      }
-      document.getElementById('totalDonations').textContent = `Total donated flats: ${litFlats.size} / ${totalFlats}`;
-    }
+    document.getElementById('towersContainer').appendChild(createTower('A', 5));
+    document.getElementById('towersContainer').appendChild(createTower('B', 5));
+    document.getElementById('towersContainer').appendChild(createTower('C', 2));
+    document.getElementById('towersContainer').appendChild(createTower('D', 5));
+    document.getElementById('towersContainer').appendChild(createTower('E', 5));
 
-    updateTowers();
+    
+    document.getElementById('totalDonations').textContent = `Total donated flats: ${litFlats.size} / 387 (${overalllitPercentage}%)`;
+
   </script>
 </body>
 </html>
