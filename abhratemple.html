@@ -167,7 +167,20 @@
       visibility: visible;
       opacity: 1;
     }
+            .donor-list {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #ffffff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: left;
+      width: 100%;
+      max-width: 400px;
+    }
     
+    .donor-list h2 {
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body>
@@ -176,7 +189,10 @@
   <div id="totalDonations">Total donated flats: 0 / 387 (0%)</div>
 
   <div class="towers-container" id="towersContainer"></div>
-
+  <div class="donor-list">
+    <h2>Other Donors</h2>
+    <ul id="donorList"></ul>
+  </div>
   <script>
     const towerConfigs = {
       'A': 5,
@@ -618,7 +634,23 @@ const flatOwners = {
 
       // Add more flat owner data here
     };
-    
+     const otherDonors = [
+      'Myhome Group',
+      'Dr Nikhil Ghadyalpatil',
+      'RAVI4691P',
+      'Rajani Bansal',
+      'Kishan Gupta (Panipuri Staff Owner)'
+    ];
+
+    function updateDonorList() {
+      const donorListElement = document.getElementById('donorList');
+      donorListElement.innerHTML = '';
+      otherDonors.forEach(donor => {
+        const listItem = document.createElement('li');
+        listItem.textContent = donor;
+        donorListElement.appendChild(listItem);
+      });
+    }       
     function padNumber(num) {
       return num.toString().padStart(2, '0');
     }
@@ -685,7 +717,7 @@ const flatOwners = {
 
     
     document.getElementById('totalDonations').textContent = `Total donated flats: ${litFlats.size} / 387 (${overalllitPercentage}%)`;
-
+	  updateDonorList();
   </script>
 </body>
 </html>
